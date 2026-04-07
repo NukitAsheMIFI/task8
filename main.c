@@ -5,7 +5,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
-#define SIZE 3
+#define SIZE 100
 
 volatile sig_atomic_t got_sigint = 0;
 
@@ -42,6 +42,7 @@ int main(int argc, char **argv){
 		for (int j = 0; j < SIZE; j++){
 			A.matrix[i][j] = rand() % 10; //заполнение матрицы случайными числами
 			B.matrix[i][j] = rand() % 10;
+			C.matrix[i][j] = 0;
 		}
 	}
 	int use_sa;
@@ -52,24 +53,26 @@ int main(int argc, char **argv){
 		use_sa = 1; //использование sigaction
 	}
 	else {
-		printf("неизвестный системный вызов");
+		printf("неизвестный системный вызов\n");
 		return 1;
 	}
 	interruptor(use_sa, my_handler); //передача функции, принимающей int
 	//s21_mult_matrix(&A, &B, &C);
     for (int i = 0; i < SIZE; i++) {
         for (int j = 0; j < SIZE; j++) {
-        	C.matrix[i][j] = 0;
-            if (got_sigint) { //обнаружен ctrl-C
-            	printf("\n");
-                printf("i=%d j=%d\n", i, j);
-               	interruptor(use_sa, SIG_DFL); //возвращение к стандартному поведению
-                got_sigint = 0; 
-            }
-            for (int k = 0; k < SIZE; k++){
-                C.matrix[i][j] += A.matrix[i][k] * B.matrix[k][j];
-        	}
-        	usleep(500000); //задержка полсекунды
+        	for (int k = 0; k < SIZE; k++) {
+	            if (got_sigint) { //обнаружен ctrl-C
+	                printf("%d %d\n", i, k); // матрица 1
+	                printf("%d %d\n", k, j); // матрица 2
+	                printf("%d %d\n", i, j); // матрица 3
+	               	interruptor(use_sa, SIG_DFL); //возвращение к стандартному поведению
+	                got_sigint = 0; 
+	            }
+	            for (int k = 0; k < SIZE; k++){
+	                C.matrix[i][j] += A.matrix[i][k] * B.matrix[k][j];
+	        	}
+	        	usleep(500000); //задержка полсекунды
+	        }
     	}
 	}
 
